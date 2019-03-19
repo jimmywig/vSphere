@@ -1,0 +1,7 @@
+## Get scratch datastore location for all ESXi hosts
+$vmhost = Get-VMHost
+$scratch = $vmhost | Get-AdvancedSetting -Name "ScratchConfig.CurrentScratchLocation"
+$scratchuuid = (($scratch.Value).split("/"))[-1]
+$hostvolume = $vmhost | get-datastore | Select Name,@{N='uuid';E={$_.ExtensionData.info.vmfs.uuid}} 
+ 
+$hostvolume | where-object uuid -eq $scratchuuid
