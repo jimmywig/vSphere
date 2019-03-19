@@ -1,0 +1,17 @@
+## Usefull to find Datastore dependencies, VM's with FLOPPIES and CDROMS
+
+$isolistvm = Get-VM | Get-CDDrive | where {$_.IsoPath -ne $null} |select parent
+$floppieslistvm = Get-VM | Get-FloppyDrive | where floppyimagepath -ne $null | select parent
+$floppieslisttemplate = get-template | Get-FloppyDrive | where floppyimagepath -ne $null | select parent
+$isolisttemplate = get-template | Get-CDDrive | where {$_.IsoPath -ne $null} |select parent
+
+
+$isolistvm.count
+$floppieslistvm.count
+$floppieslisttemplate.count
+$isolisttemplate.count
+    
+$isolistvm | export-csv c:\temp\isoflop.csv
+$floppieslistvm| export-csv -append c:\temp\isoflop.csv
+$floppieslisttemplate| export-csv -append c:\temp\isoflop.csv
+$isolisttemplate| export-csv -append c:\temp\isoflop.csv
