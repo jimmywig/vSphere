@@ -1,0 +1,52 @@
+##### Detach LUN's from host based on a search or CSV containing datastore names
+#### OR just provide CSV with actual NAA's (canonical)
+
+############################################################################################################################
+##### USE SEARCH for Datastore Name
+#$alldatastores = get-datastore | where name -NotMatch "pure" | where name -match "MGT"
+##### OR US CSV FILE for Datastore Name
+#$DSFILE = import-csv -path c:\temp\ds.csv
+#$alldatastores = $DSFILE.ds |
+#ForEach-Object {
+#$DSlist = $_
+#get-datastore | where name -EQ $DSlist}
+
+
+##### Now Convert Datastore names ID's to Canonical
+#$LunIDs = $alldatastores |
+#ForEach-Object {
+#$Datastore = $_
+#$Datastore.ExtensionData.Info.Vmfs.Extent[0].DiskName}
+
+###############################################################################################################################
+##### OR JUST Provide Canonical list in CSV (disregard all the above)
+$NAAFILE = import-csv -path c:\temp\lunlistded.csv
+$LUNIDs = $NAAFILE.lun
+
+##### HOST name
+$ESX = 'XXX'
+$ESXhost = get-vmhost -name $ESX
+
+##### Function where the magic happens
+
+function Detach-Disk{
+    param(
+        [VMware.VimAutomation.ViCore.Impl.V1.Inventory.VMHostImpl]$VMHost,
+        [string]$CanonicalName    )
+
+    $storSys = Get-View $VMHost.Extensiondata.ConfigManager.StorageSystem
+    $lunUuid = (Get-ScsiLun -VmHost $VMHost | where {$_.CanonicalName -eq $CanonicalName}).ExtensionData.Uuid
+
+    $storSys.DetachScsiLun($lunUuid)
+}
+
+########################################################################################
+
+Foreach($VMHost in $esxhost)
+{
+    Foreach($LUNid in $LunIDs)
+    {
+        Write-Host "Detaching" $LUNid "from" $VMHost -ForegroundColor "Yellow"
+        Detach-Disk -VMHost $VMHost -CanonicalName $LUNid
+    }
+}
