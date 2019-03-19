@@ -1,0 +1,40 @@
+# Unmount Datastore and detach the LUN on a host
+
+
+#VARIABLE
+$esxName = 'XX'
+$viserver = "XX"
+$datastoreName = 'XX'
+
+#Connect to vSphere
+
+import-module VMware.VimAutomation.Cis.Core
+import-module VMware.VimAutomation.Cloud
+connect-viserver $viserver
+
+# get everything in order
+
+$esx = Get-VMHost -Name $esxName
+
+$ds = Get-Datastore -Name $datastoreName
+
+$canonicalName = $ds.ExtensionData.Info.Vmfs.Extent[0].DiskName
+
+$storSys = Get-View $esx.Extensiondata.ConfigManager.StorageSystem
+
+$device = $storsys.StorageDeviceInfo.ScsiLun | where {$_.CanonicalName -eq $canonicalName}
+
+ 
+
+if($device.OperationalState[0] -eq 'ok'){
+
+# unmount disk
+
+    $StorSys.UnmountVmfsVolume($ds.ExtensionData.Info.Vmfs.Uuid)
+
+}
+ 
+
+# Detach disk
+
+$storSys.DetachScsiLun($device.Uuid)
