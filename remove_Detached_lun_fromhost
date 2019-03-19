@@ -1,4 +1,4 @@
-##Removes unmounted ready to be detached LUNS for a host
+##Removes unmounted and detached LUNS from a host
 $counter = 0 # Initialize counter for progress bar
 $hosts=get-vmhost -name 'XXX'
 Foreach ($esxhost in $hosts)
